@@ -24,36 +24,36 @@ This is a \`Deno\` pratice project by [Leon.D](https://kongfandong.cn)
 
 ## 🚀Public API
 
-### [/bing/daily](/bing/daily)
+**Movie**
 
-Return daily photo from Bing.
-
-Params: (\`w\`: number, \`h\`: number, \`type\`: 'redirect' | 'json')
-
----
-
-### [/bing/list](/bing/list)
-
-Return recent half month Bing daily photo list for json type. 
++ **[/movieLines](/movieLines)** - Return random movie lines for json type.
++ **[/movieLinesList](/movieLinesList)** - Return movie lines cache list for json type.
 
 ---
 
-### [/unsplash/random](/unsplash/random)
+**Photo**
 
-Return random photo from Unsplash.
++ **[/bing/daily](/bing/daily)** - Return daily photo from Bing.
 
-Params: (\`w\`: number, \`h\`: number, \`type\`: 'redirect' | 'json', \`keyword\`: string)
+  *Params: (\`w\`: number, \`h\`: number, \`type\`: 'redirect' | 'json')*
+
++ **[/bing/list](/bing/list)** - Return recent half month Bing daily photo list for json type. 
+
++ **[/unsplash/random](/unsplash/random)** - Return random photo from Unsplash.
+
+  *Params: (\`w\`: number, \`h\`: number, \`type\`: 'redirect' | 'json', \`keyword\`: string)*
+
++ **[/unsplash/list](/unsplash/list)** - Return Unsplash list from daily cache for json type.
+
++ **[/sina/random](/sina/random)** - Return random photo from sina (transfer).
 
 ---
 
-### [/unsplash/list](/unsplash/list)
+**HotList**
 
-Return Unsplash list from daily cache for json type.
-
----
-
-### [/movieLines](/movieLines)
-Return random movie lines for a json type.
++ **[/hotList/zhihu](/hotList/zhihu)** - Return Zhihu hot list
++ **[/hotList/weibo](/hotList/weibo)** - Return Weibo hot list
++ **[/hotList/juejin](/hotList/juejin)** - Return Juejin hot list
 
 ---
 
@@ -63,10 +63,31 @@ Return random movie lines for a json type.
   ctx.response.type = 'html'
 })
 
-
+// Start: === Movie Lines ===
+const movieLinesCache = { time: 0, list: [] as any[] }
+const getMovieLines = async () => {
+  const target = 'https://kongfandong.cn/api/movieLinesList'
+  const res = await fetch(target)
+  const { time: _time, list: _list } = await res.json()
+  movieLinesCache.time = _time
+  movieLinesCache.list = _list
+  console.log(`update movieLineCache at ${+new Date()}`)
+}
+router.get('/movieLines', async ctx => {
+  if (movieLinesCache.list.length === 0) await getMovieLines()
+  const randomIndex = ~~(Math.random() * movieLinesCache.list.length)
+  ctx.response.body = { ...movieLinesCache.list[randomIndex], cacheTime: movieLinesCache.time }
+})
+router.get('/movieLinesList', async ctx => {
+  if (movieLinesCache.list.length === 0) await getMovieLines()
+  ctx.response.body = { time: movieLinesCache.time, list: movieLinesCache.list }
+})
+cron('0 0,15,30,45 * * * *', () => {
+  getMovieLines(); // refresh pre 15 minutes
+});
+// End: === Movie Lines ===
 
 // Start: === Bing Photo ===
-// `/bing/daily`: Return daily photo from Bing.
 router.get('/bing/daily', async ctx => {
   const { type = 'redirect', w, h } = getQuery(ctx)
   const res = await fetch('https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1')
@@ -106,7 +127,6 @@ const getBingList = async () => {
   bingListCache.list = list
   console.log(`update bingListCache at ${+new Date()}`)
 }
-// `/bing/list`: Return recent half month Bing daily photo list for json type
 router.get('/bing/list', async ctx => {
   if (bingListCache.list.length === 0) await getBingList()
   ctx.response.body = { time: bingListCache.time, list: bingListCache.list }
@@ -115,7 +135,6 @@ cron('0 5 0,12 * * *', () => {
   getBingList(); // refresh pre 12 hours
 });
 // End: === Bing Photo ===
-
 
 // Start: === Unsplash Photo ===
 router.get('/unsplash/random', async ctx => {
@@ -163,31 +182,97 @@ cron('0 5 0,12 * * *', () => {
 })
 // End: === Unsplash Photo ===
 
-
-// Start: === Movie Lines ===
-const movieLinesCache = { time: 0, list: [] as any[] }
-const getMovieLines = async () => {
-  const target = 'https://kongfandong.cn/api/movieLinesList'
+// Start: === Random sina photo ===
+router.get('/sina/random', async ctx => {
+  const { type = 'redirect' } = getQuery(ctx)
+  const target = 'https://api.ixiaowai.cn/gqapi/gqapi.php?return=json'
   const res = await fetch(target)
-  const { time: _time, list: _list } = await res.json()
-  movieLinesCache.time = _time
-  movieLinesCache.list = _list
-  console.log(`update movieLineCache at ${+new Date()}`)
-}
-router.get('/movieLines', async ctx => {
-  if (movieLinesCache.list.length === 0) await getMovieLines()
-  const randomIndex = ~~(Math.random() * movieLinesCache.list.length)
-  ctx.response.body = { ...movieLinesCache.list[randomIndex], cacheTime: movieLinesCache.time }
+  const data = await res.json()
+  if (type === 'json') {
+    ctx.response.body = data
+  } else {
+    ctx.response.redirect(data.imgurl)
+  }
 })
-router.get('/movieLinesList', async ctx => {
-  if (movieLinesCache.list.length === 0) await getMovieLines()
-  ctx.response.body = { time: movieLinesCache.time, list: movieLinesCache.list }
-})
-cron('0 0,15,30,45 * * * *', () => {
-  getMovieLines(); // refresh pre 15 minutes
-});
-// End: === Movie Lines ===
+// End: === Random sina photo ===
 
+
+// ### List Api
+// Start: === Juejin List ===
+const juejinCache = { time: 0, list: [] as any[] }
+const getJuejinList = async () => {
+  const url = `https://api.juejin.cn/recommend_api/v1/article/recommend_all_feed`
+  const res = await fetch(url, {
+    method: 'post',
+    body: JSON.stringify({ limit: 50, client_type: 2680, cursor: '0', id_type: 2, sort_type: 200 }),
+    headers: { 'Content-Type': 'application/json' }
+  })
+  const data = await res.json()
+  const list = data.data
+  juejinCache.time = +new Date()
+  juejinCache.list = list.reduce((prev: any, curr: any) => {
+    if (curr.item_type === 2) {
+      const article = curr && curr.item_info && curr.item_info.article_info
+      if (article) {
+        const { article_id, title, digg_count, view_count, link_url } = article
+        const result = {
+          article_id, 
+          title, 
+          digg_count, 
+          view_count, 
+          link_url: link_url || `https://juejin.cn/post/${article_id}`
+        }
+        return [...prev, result]
+      }
+    }
+    return prev
+  }, [])
+}
+router.get('/hotList/juejin', async ctx => {
+  if (juejinCache.list.length === 0) await getJuejinList()
+  ctx.response.body = { time: juejinCache.time, list: juejinCache.list }
+})
+// End: === Juejin List ===
+
+// Start: === Zhihu List ===
+const zhihuCache = { time: 0, list: [] as any[] }
+const getZhihuList = async () => {
+  const url = 'https://kongfandong.cn/api/zhihuList'
+  const res = await fetch(url)
+  const { time, list } = await res.json()
+  zhihuCache.time = time
+  zhihuCache.list = list
+}
+router.get('/hotList/zhihu', async ctx => {
+  if (zhihuCache.list.length === 0) await getZhihuList()
+  ctx.response.body = { time: zhihuCache.time, list: zhihuCache.list }
+})
+// End: === Zhihu List ===
+
+// Start: === Weibo List ===
+const weiboCache = { time: 0, list: [] as any[] }
+const getWeiboList = async () => {
+  const url = 'https://m.weibo.cn/api/container/getIndex?containerid=106003%2526filter_type%253Drealtimehot'
+  const res = await fetch(url)
+  const data = await res.json()
+  const list = data.data.cards[0].card_group
+  weiboCache.time = +new Date()
+  weiboCache.list = list.map((item: any) => {
+    const { pic, desc, icon, scheme, desc_extr } = item
+    return { pic, desc, icon, scheme, desc_extr }
+  }).slice(0, 50)
+}
+router.get('/hotList/weibo', async ctx => {
+  if (weiboCache.list.length === 0) await getWeiboList()
+  ctx.response.body = { time: weiboCache.time, list: weiboCache.list }
+})
+// End:  === Weibo List ===
+
+cron('0 0,15,30,45 * * * *', () => {
+  getJuejinList(); // refresh pre 12 hours
+  getZhihuList();
+  getWeiboList();
+});
 
 app.use(router.routes()).use(router.allowedMethods());
 
