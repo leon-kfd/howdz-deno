@@ -17,13 +17,13 @@ This is a `Deno` pratice project by [Leon.D](https://kongfandong.cn)
 
 + **[/bing/daily](https://howdz.deno.dev/bing/daily)** - Return daily photo from Bing.
 
-  *Params: (\`w\`: number, \`h\`: number, \`type\`: 'redirect' | 'json')*
+  *Params: (`w`: number, `h`: number, `type`: 'redirect' | 'json')*
 
 + **[/bing/list](https://howdz.deno.dev/bing/list)** - Return recent half month Bing daily photo list for json type. 
 
 + **[/unsplash/random](https://howdz.deno.dev/unsplash/random)** - Return random photo from Unsplash.
 
-  *Params: (\`w\`: number, \`h\`: number, \`type\`: 'redirect' | 'json', \`keyword\`: string)*
+  *Params: (`w`: number, `h`: number, `type`: 'redirect' | 'json', `keyword`: string)*
 
 + **[/unsplash/list](https://howdz.deno.dev/unsplash/list)** - Return Unsplash list from daily cache for json type.
 
