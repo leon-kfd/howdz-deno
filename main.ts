@@ -147,7 +147,7 @@ router.get('/unsplash/random', async ctx => {
   } else {
     const res = await fetch(target, { method: 'HEAD' })
     const url = res.url
-    const mirror = url.replace('images.unsplash.com', 'rmt.ladydaily.com/fetch/~/source/unsplash')
+    const mirror = url.replace('images.unsplash.com', 'dogefs.s3.ladydaily.com/~/source/unsplash')
     if (type === 'json') {
       ctx.response.body = { url, mirror }
     } else if (type === 'mirror') {
@@ -216,10 +216,10 @@ const getJuejinList = async () => {
       if (article) {
         const { article_id, title, digg_count, view_count, link_url } = article
         const result = {
-          article_id, 
-          title, 
-          digg_count, 
-          view_count, 
+          article_id,
+          title,
+          digg_count,
+          view_count,
           link_url: link_url || `https://juejin.cn/post/${article_id}`
         }
         return [...prev, result]
