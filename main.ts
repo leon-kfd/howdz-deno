@@ -268,6 +268,13 @@ router.get('/hotList/weibo', async ctx => {
 })
 // End:  === Weibo List ===
 
+// Start: === Random Verse ===
+router.get('/randomVerse', async ctx => {
+  const res = await fetch('https://v1.jinrishici.com/all.json')
+  const data = await res.json()
+  ctx.response.body = data
+})
+
 cron('0 0,15,30,45 * * * *', () => {
   getJuejinList(); // refresh pre 12 hours
   getZhihuList();
