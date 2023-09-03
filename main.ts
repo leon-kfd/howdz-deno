@@ -1,5 +1,6 @@
 import { Application, Router, helpers } from "https://deno.land/x/oak/mod.ts"
-import { Marked } from "https://deno.land/x/markdown@v2.0.0/mod.ts";
+// import { Marked } from "https://deno.land/x/markdown@v2.0.0/mod.ts";
+import { Marked } from 'https://raw.githubusercontent.com/ubersl0th/markdown/master/mod.ts'
 import { cron } from 'https://deno.land/x/deno_cron/cron.ts';
 
 const { getQuery } = helpers;
