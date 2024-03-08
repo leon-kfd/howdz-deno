@@ -1,4 +1,4 @@
-import { Application, Router, helpers } from "https://deno.land/x/oak/mod.ts"
+import { Application, Router, helpers } from "https://deno.land/x/oak@14.2.0/mod.ts"
 import { marked } from 'npm:marked'
 import axios from 'npm:axios'
 import { cron } from 'https://deno.land/x/deno_cron/cron.ts';
@@ -278,7 +278,7 @@ router.get('/randomVerse', async ctx => {
 
 
 router.post('/genRedirect', async ctx => {
-  const { url } = await ctx.request.body("json").value;
+  const { url } = await ctx.request.body.json();
   let resultURL = ''
 	try {
 		const res = await axios.get(url, {
