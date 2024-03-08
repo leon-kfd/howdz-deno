@@ -1,6 +1,6 @@
 import { Application, Router, helpers } from "https://deno.land/x/oak/mod.ts"
-// import { Marked } from "https://deno.land/x/markdown@v2.0.0/mod.ts";
-import { Marked } from 'https://raw.githubusercontent.com/ubersl0th/markdown/master/mod.ts'
+import { marked } from 'npm:marked'
+import axios from 'npm:axios'
 import { cron } from 'https://deno.land/x/deno_cron/cron.ts';
 
 const { getQuery } = helpers;
@@ -59,7 +59,7 @@ This is a \`Deno\` pratice project by [Leon.D](https://kongfandong.cn)
 ---
 
 `
-  const html = `<title>Howdz Deno</title><link rel="stylesheet" href="https://unpkg.com/water.css@2.1.1/out/water.css" /><body>${Marked.parse(md).content}</body>`
+  const html = `<title>Howdz Deno</title><link rel="stylesheet" href="https://unpkg.com/water.css@2.1.1/out/water.css" /><body>${marked.parse(md)}</body>`
   ctx.response.body = html
   ctx.response.type = 'html'
 })
@@ -274,6 +274,28 @@ router.get('/randomVerse', async ctx => {
   const res = await fetch('https://v1.jinrishici.com/all.json')
   const data = await res.json()
   ctx.response.body = data
+})
+
+
+router.post('/genRedirect', async ctx => {
+  const { url } = await ctx.request.body("json").value;
+  let resultURL = ''
+	try {
+		const res = await axios.get(url, {
+			maxRedirects: 0,
+			validateStatus: function (status) {
+		    return status >= 200 && status < 303;
+		  },
+			timeout: 10000
+		})
+		const { status, headers: { location } } = res;
+		if (status === 302) {
+			resultURL = location
+		}
+	} catch(e) {
+		console.error('error')
+	}
+  ctx.response.body = { url: resultURL }
 })
 
 cron('0 0,15,30,45 * * * *', () => {
